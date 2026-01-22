@@ -20,23 +20,32 @@ cursor.execute("""
         email VARCHAR(100) UNIQUE NOT NULL,
         phone VARCHAR(20) UNIQUE NOT NULL,
         password VARCHAR(100) NOT NULL,
-        role VARCHAR(20) DEFAULT 'user',
-        is_driver TINYINT(1) DEFAULT 0
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 """)
-print("✔ Table 'users' ready")
+print("✔ Table 'user' ready")
 cursor.execute("""
-    CREATE TABLE IF NOT EXISTS driver_profiles (
+    CREATE TABLE IF NOT EXISTS drivers (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        phone VARCHAR(20) UNIQUE NOT NULL,
+        password VARCHAR(100) NOT NULL,
         vehicle_model VARCHAR(50),
         vehicle_number VARCHAR(20),
         license_number VARCHAR(30),
-        status VARCHAR(20) DEFAULT 'pending',
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 """)
-print("✔ Table 'driver_profiles' ready")
+print("✔ Table 'driver' ready")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS admin (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) UNIQUE,
+        password VARCHAR(100)                     
+)
+""")
+print("✔ Table 'admin' ready")               
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS beverages (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,17 +58,17 @@ print("✔ Table 'beverages' ready")
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS rides (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        passenger_id INT NOT NULL,
+        user_id INT NOT NULL,
         driver_id INT,
-        pickup VARCHAR(255) NOT NULL,
+        pickup_location VARCHAR(255) NOT NULL,
         drop_location VARCHAR(255) NOT NULL,
         vehicle_type VARCHAR(20),
         beverage_id INT,
         total_amount DECIMAL(10,2),
         status VARCHAR(20) DEFAULT 'pending',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (passenger_id) REFERENCES users(id),
-        FOREIGN KEY (driver_id) REFERENCES users(id),
+        ride_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (driver_id) REFERENCES drivers(id),
         FOREIGN KEY (beverage_id) REFERENCES beverages(id)
     )
 """)
@@ -70,13 +79,25 @@ cursor.execute("""
         ride_id INT NOT NULL,
         amount DECIMAL(10,2) NOT NULL,
         method VARCHAR(20),
+        status VARCHAR(20) DEFAULT 'unpaid',      
         paid_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (ride_id) REFERENCES rides(id)
     )
 """)
 print("✔ Table 'payments' ready")
-
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS earnings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        driver_id INT,
+        ride_id INT,
+        amount DECIMAL(10,2),
+        earning_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (driver_id) REFERENCES drivers(id),
+        FOREIGN KEY (ride_id) REFERENCES rides(id) 
+    )                  
+""")
+print("✔ Table 'earnings' ready")
 connection.commit()
 cursor.close()
 connection.close()
-print("\n🎉 All tables created successfully! Backend database setup complete.")
+print("\n All tables created successfully! Backend database setup complete.")
